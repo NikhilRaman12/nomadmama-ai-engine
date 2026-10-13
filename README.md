@@ -63,12 +63,11 @@ Native support for text prompts, binary image files, and audio assets (MIME-type
 ### 3. State Isolation & Persistent Memory (`NomadMamaMemoryEngine`)
 Industrial-grade thread context registry preserving state transitions, prior signed dossiers, budget constraints, and chat history across refinement cycles.
 
-### 4. Live Public API Function Tooling ([`tools.py`](tools.py))
-Integrated with the **Open-Meteo Public API** (Weather & Geocoding):
-- Resolves coordinates for any destination worldwide.
-- Retrieves real-time temperature, windspeed, and 3-day precipitation probabilities.
-- Free and open access, with optional `OPEN_METEO_API_KEY` environment variable support.
-- Directly exposed to Agent 1 (`run_route_pace_optimizer`) to dynamically balance outdoor vs. indoor activities based on live climate risk.
+### 4. External Function Tooling ([`tools.py`](tools.py))
+- **Google Maps Geocoding API (`geocode_address`)**: Converts addresses, landmarks, and districts into precise coordinates (`latitude`, `longitude`).
+- **Google Maps Places API (New) (`find_nearby_places`)**: Performs high-velocity nearby searches via `places.googleapis.com/v1/places:searchNearby` using `X-Goog-FieldMask` and `X-Goog-Api-Key` to return key fields (`name`, `address`, `location`).
+- **Open-Meteo Weather API (`get_destination_weather`)**: Provides real-time temperatures and precipitation risk to dynamically adjust outdoor vs. indoor pacing.
+- **Security & Secret Handling**: All API keys are loaded dynamically from environment variables or the local `.env` file (`GOOGLE_MAPS_API_KEY`) and are never hardcoded.
 
 ---
 

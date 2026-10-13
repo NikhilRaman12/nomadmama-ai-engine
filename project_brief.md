@@ -19,5 +19,7 @@ NomadMama AI (TravelMama Engine) is an autonomous, high-velocity travel destinat
 - **Memory Engine**: `NomadMamaMemoryEngine` for thread-isolated state transitions and multi-turn refinement.
 
 ## External Tooling & Public APIs
-- **Weather & Geocoding Integration**: Integrated with the Open-Meteo Public API (free, open, no mandatory key required; supports optional `OPEN_METEO_API_KEY` environment variable).
-- **Functionality**: Provides real-time destination geocoding and current weather/forecast conditions to allow the Route & Pace Optimizer to calibrate outdoor vs. indoor pacing.
+- **Google Maps Geocoding API**: Resolves physical addresses, waypoints, and landmarks into exact geographic coordinates (`lat`, `lng`).
+- **Google Maps Places API (New)**: Executes high-precision nearby place searches (`places:searchNearby`) using `X-Goog-FieldMask` and `X-Goog-Api-Key` to return key fields (name, formatted address, location coordinates).
+- **Open-Meteo Public Weather API**: Real-time destination geocoding and forecast conditions to allow the Route & Pace Optimizer to calibrate outdoor vs. indoor pacing.
+- **Key Storage**: All credentials read strictly from local `.env` or system environment variables (`GOOGLE_MAPS_API_KEY`).

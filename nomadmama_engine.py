@@ -25,8 +25,8 @@ from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
 
-# Function Tools (Public APIs - Open-Meteo)
-from tools import get_destination_weather
+# Function Tools (Google Maps Platform & Open-Meteo)
+from tools import get_destination_weather, geocode_address, find_nearby_places
 
 
 # ==============================================================================
@@ -214,7 +214,7 @@ def run_route_pace_optimizer(
         contents=contents,
         config=types.GenerateContentConfig(
             system_instruction=system_instruction,
-            tools=[get_destination_weather],
+            tools=[get_destination_weather, geocode_address, find_nearby_places],
             temperature=0.2,
         )
     )
@@ -295,6 +295,7 @@ def run_lodging_hub_router(
         contents=contents,
         config=types.GenerateContentConfig(
             system_instruction=system_instruction,
+            tools=[geocode_address, find_nearby_places],
             temperature=0.2,
         )
     )
