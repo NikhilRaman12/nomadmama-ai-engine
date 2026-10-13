@@ -25,6 +25,9 @@ from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
 
+# Function Tools (Public APIs - Open-Meteo)
+from tools import get_destination_weather
+
 
 # ==============================================================================
 # 1. PYDANTIC DATA STRUCTURES (STRICT SCHEMA DEFINITION)
@@ -211,6 +214,7 @@ def run_route_pace_optimizer(
         contents=contents,
         config=types.GenerateContentConfig(
             system_instruction=system_instruction,
+            tools=[get_destination_weather],
             temperature=0.2,
         )
     )
