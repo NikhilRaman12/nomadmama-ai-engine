@@ -101,12 +101,20 @@ $env:GEMINI_API_KEY="your-gemini-api-key"
 
 ---
 
-## 🧪 Running the Verification Suite
+## 🎮 Running the ADK Web Playground
 
-Run the end-to-end multi-turn verification script:
+To launch the interactive Agent Development Kit (ADK) Web UI with live reload and Vertex AI Agent Engine Memory Bank:
+
 ```bash
-python nomadmama_engine.py
+uv run adk web . --port 8080 --reload_agents --memory_service_uri=agentengine://8472910485920184712
 ```
+
+Open your browser at **`http://127.0.0.1:8080`** to test:
+- Cross-session memory retention for user dietary restrictions & allergies.
+- Sandboxed Python execution via `AgentEngineSandboxCodeExecutor`.
+- Function tool execution (`geocode_address`, `find_nearby_places`, `get_destination_weather`, `generate_destination_image`).
+
+---
 
 ### Included Tests:
 1. **Test 1 (Initial Multi-Modal Mandate)**:

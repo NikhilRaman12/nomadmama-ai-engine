@@ -1,0 +1,7 @@
+{
+  "project_id": "dataguard-ml-agents-pipeline",
+  "location": "us-central1",
+  "remote_agent_runtime_id": "projects/dataguard-ml-agents-pipeline/locations/us-central1/reasoningEngines/8472910485920184712",
+  "deployed_at": "2026-10-13T13:45:00Z",
+  "target": "agent_engine"
+}
