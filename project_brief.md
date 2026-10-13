@@ -22,4 +22,8 @@ NomadMama AI (TravelMama Engine) is an autonomous, high-velocity travel destinat
 - **Google Maps Geocoding API**: Resolves physical addresses, waypoints, and landmarks into exact geographic coordinates (`lat`, `lng`).
 - **Google Maps Places API (New)**: Executes high-precision nearby place searches (`places:searchNearby`) using `X-Goog-FieldMask` and `X-Goog-Api-Key` to return key fields (name, formatted address, location coordinates).
 - **Open-Meteo Public Weather API**: Real-time destination geocoding and forecast conditions to allow the Route & Pace Optimizer to calibrate outdoor vs. indoor pacing.
+- **Multimodal Image Generation (`gemini-3.1-flash-lite-image`)**: Generates photorealistic visuals for waypoints and attractions in the global region.
+- **Dual Persistence**:
+  1. Saves as an in-memory artifact via `tool_context.save_artifact` for the Playground Artifacts panel.
+  2. Directly uploads in-memory bytes to the public Cloud Storage bucket: `dataguard-ml-agents-pipeline-document-uploads` returning `https://storage.googleapis.com/dataguard-ml-agents-pipeline-document-uploads/<object>` without local disk IO.
 - **Key Storage**: All credentials read strictly from local `.env` or system environment variables (`GOOGLE_MAPS_API_KEY`).

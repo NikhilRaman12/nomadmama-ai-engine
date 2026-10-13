@@ -289,6 +289,125 @@ def get_destination_weather(destination: str) -> Dict[str, Any]:
     }
 
 
+# ==============================================================================
+# MULTIMODAL MEDIA GENERATION: GEMINI-3.1-FLASH-LITE-IMAGE & GCS UPLOAD
+# ==============================================================================
+
+# Hardcoded bucket name as specified
+PUBLIC_GCS_BUCKET_NAME = "dataguard-ml-agents-pipeline-document-uploads"
+
+
+def create_multimodal_part_from_bytes(data: bytes, mime_type: str) -> Any:
+    """
+    Creates a native types.Part object from in-memory binary data for images or audio/voice.
+    Supports audio/wav, audio/mp3, audio/ogg, audio/m4a, image/png, image/jpeg, etc.
+    """
+    from google.genai import types
+    return types.Part.from_bytes(data=data, mime_type=mime_type)
+
+
+def generate_destination_image(
+    item_name: str,
+    visual_description: str,
+    tool_context: Optional[Any] = None
+) -> Dict[str, Any]:
+    """
+    Generates a high-fidelity image for a travel destination, attraction, or culinary item
+    using the gemini-3.1-flash-lite-image model in the global region.
+    
+    1. Saves the generated image using tool_context.save_artifact so it renders in the Playground Artifacts panel.
+    2. Directly streams/uploads the in-memory image bytes to the public Cloud Storage bucket:
+       'dataguard-ml-agents-pipeline-document-uploads'
+       and returns its public https URL (https://storage.googleapis.com/<bucket>/<object>).
+       Does NOT write the image to a local file.
+    
+    Args:
+        item_name: Name of the destination stop, landmark, or culinary item (e.g. 'Fushimi Inari Shrine').
+        visual_description: Visual stylistic and scene prompt for image generation.
+        tool_context: Optional ADK / Playground ToolContext holding the save_artifact method.
+        
+    Returns:
+        Dictionary containing item_name, public image_url, and artifact metadata.
+    """
+    from google import genai
+    from google.genai import types
+    from google.cloud import storage
+
+    client = genai.Client()
+    prompt = f"Professional vibrant cinematic travel photography of {item_name}. {visual_description}. Ultra-detailed, 8k resolution, authentic lighting."
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.1-flash-lite-image",
+            contents=prompt,
+        )
+
+        image_bytes: Optional[bytes] = None
+        mime_type = "image/png"
+
+        if response.candidates and response.candidates[0].content:
+            for part in response.candidates[0].content.parts:
+                if getattr(part, "inline_data", None):
+                    data = part.inline_data.data
+                    if isinstance(data, str):
+                        import base64
+                        image_bytes = base64.b64decode(data)
+                    else:
+                        image_bytes = data
+                    mime_type = getattr(part.inline_data, "mime_type", "image/png") or "image/png"
+                    break
+
+        if not image_bytes:
+            return {
+                "status": "error",
+                "item_name": item_name,
+                "message": "No inline image data returned by gemini-3.1-flash-lite-image."
+            }
+
+        sanitized_slug = "".join(c if c.isalnum() or c in ("-", "_") else "_" for c in item_name.lower())
+        filename = f"{sanitized_slug}.png"
+
+        # (1) Save artifact via tool_context for Playground Artifacts panel
+        saved_artifact_status = "not_available"
+        if tool_context and hasattr(tool_context, "save_artifact"):
+            artifact_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
+            try:
+                tool_context.save_artifact(filename=filename, artifact=artifact_part)
+                saved_artifact_status = "saved"
+            except TypeError:
+                try:
+                    tool_context.save_artifact(name=filename, data=image_bytes, mime_type=mime_type)
+                    saved_artifact_status = "saved"
+                except Exception as e:
+                    saved_artifact_status = f"error: {str(e)}"
+            except Exception as e:
+                saved_artifact_status = f"error: {str(e)}"
+
+        # (2) Upload in-memory bytes to the public Cloud Storage bucket
+        object_key = f"nomadmama-destinations/{sanitized_slug}_{int(time.time())}.png"
+        storage_client = storage.Client(project="dataguard-ml-agents-pipeline")
+        bucket = storage_client.bucket(PUBLIC_GCS_BUCKET_NAME)
+        blob = bucket.blob(object_key)
+        blob.upload_from_string(image_bytes, content_type=mime_type)
+
+        public_https_url = f"https://storage.googleapis.com/{PUBLIC_GCS_BUCKET_NAME}/{object_key}"
+
+        return {
+            "status": "success",
+            "item_name": item_name,
+            "image_url": public_https_url,
+            "artifact_saved": saved_artifact_status,
+            "filename": filename
+        }
+
+    except Exception as exc:
+        return {
+            "status": "error",
+            "item_name": item_name,
+            "message": f"Failed to generate and upload image: {str(exc)}"
+        }
+
+
 if __name__ == "__main__":
     print("=== Function Tools Self-Test ===")
     
@@ -308,3 +427,7 @@ if __name__ == "__main__":
     print("\n[3] Testing Google Places API (New) Key Handling...")
     places_res = find_nearby_places(latitude=35.6586, longitude=139.7454, place_type="tourist_attraction")
     print(f"Response: {places_res}")
+
+    # 4. GCS Bucket Configuration
+    print(f"\n[4] Configured GCS Public Bucket: {PUBLIC_GCS_BUCKET_NAME}")
+

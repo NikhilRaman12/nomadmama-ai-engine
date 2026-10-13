@@ -58,12 +58,17 @@ The architecture uses a deterministic multi-agent state machine with persistent 
 - **Agent 4: NomadMama Master Orchestrator (Pro)**: Manages state routing, pulls historical memory context from the thread registry, compiles the payload, feeds it to `gemini-2.5-pro` with `response_schema=NomadMamaDossier`, resolves deltas, and signs off on the certified travel dossier.
 
 ### 2. Multi-Modal Interface Capability
-Native support for text prompts, binary image files, and audio assets (MIME-typed objects) passed directly into the Gemini model contents array.
+Native support for text prompts, binary image files (PNG, JPEG, WebP), and voice/audio assets (WAV, MP3, M4A, OGG) passed directly into the Gemini model contents array via `types.Part.from_bytes(...)`.
 
 ### 3. State Isolation & Persistent Memory (`NomadMamaMemoryEngine`)
 Industrial-grade thread context registry preserving state transitions, prior signed dossiers, budget constraints, and chat history across refinement cycles.
 
 ### 4. External Function Tooling ([`tools.py`](tools.py))
+- **Multimodal Image Generation (`generate_destination_image`)**:
+  - Uses `gemini-3.1-flash-lite-image` in the global region to generate visual artifacts for itinerary waypoints and culinary stops.
+  - Saves in-memory via `tool_context.save_artifact` for the Playground's Artifacts panel.
+  - Streams bytes directly to Cloud Storage bucket: `dataguard-ml-agents-pipeline-document-uploads` returning public URL (`https://storage.googleapis.com/dataguard-ml-agents-pipeline-document-uploads/<object>`).
+  - Zero local disk IO.
 - **Google Maps Geocoding API (`geocode_address`)**: Converts addresses, landmarks, and districts into precise coordinates (`latitude`, `longitude`).
 - **Google Maps Places API (New) (`find_nearby_places`)**: Performs high-velocity nearby searches via `places.googleapis.com/v1/places:searchNearby` using `X-Goog-FieldMask` and `X-Goog-Api-Key` to return key fields (`name`, `address`, `location`).
 - **Open-Meteo Weather API (`get_destination_weather`)**: Provides real-time temperatures and precipitation risk to dynamically adjust outdoor vs. indoor pacing.

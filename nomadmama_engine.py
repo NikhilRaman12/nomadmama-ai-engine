@@ -25,8 +25,14 @@ from pydantic import BaseModel, Field
 from google import genai
 from google.genai import types
 
-# Function Tools (Google Maps Platform & Open-Meteo)
-from tools import get_destination_weather, geocode_address, find_nearby_places
+# Function Tools (Google Maps Platform, Open-Meteo, & Media Gen)
+from tools import (
+    get_destination_weather,
+    geocode_address,
+    find_nearby_places,
+    generate_destination_image,
+    create_multimodal_part_from_bytes,
+)
 
 
 # ==============================================================================
@@ -43,6 +49,7 @@ class DestinationStop(BaseModel):
     micro_location: str = Field(..., description="District, ward, or neighborhood coordinate string.")
     admission_cost_usd: float = Field(..., description="Per-person admission or ticket cost in USD.", ge=0.0)
     pace_rationale: str = Field(..., description="Tactical justification for visit sequence, crowd mitigation, or pace efficiency.")
+    image_url: Optional[str] = Field(default=None, description="Public Cloud Storage URL for waypoint visual artifact.")
 
 
 class LodgingNode(BaseModel):
@@ -214,7 +221,7 @@ def run_route_pace_optimizer(
         contents=contents,
         config=types.GenerateContentConfig(
             system_instruction=system_instruction,
-            tools=[get_destination_weather, geocode_address, find_nearby_places],
+            tools=[get_destination_weather, geocode_address, find_nearby_places, generate_destination_image],
             temperature=0.2,
         )
     )
